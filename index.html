@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>간단 설문 플랫폼</title>
+  <style>
+    :root {
+      --bg: #f6f7fb;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --primary: #4f46e5;
+      --primary-soft: #eef2ff;
+      --border: #e5e7eb;
+      --success: #059669;
+      --danger: #dc2626;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .container {
+      width: min(920px, calc(100% - 32px));
+      margin: 48px auto;
+    }
+
+    .header {
+      margin-bottom: 24px;
+    }
+
+    .header h1 {
+      margin: 0 0 8px;
+      font-size: clamp(28px, 5vw, 40px);
+    }
+
+    .header p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+      margin-bottom: 20px;
+    }
+
+    .question {
+      margin-bottom: 32px;
+    }
+
+    .question:last-child {
+      margin-bottom: 0;
+    }
+
+    .question-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      background: var(--primary-soft);
+      color: var(--primary);
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+
+    .question h2 {
+      font-size: 19px;
+      margin: 0 0 16px;
+      line-height: 1.45;
+    }
+
+    .options {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+    }
+
+    .option input {
+      display: none;
+    }
+
+    .option label {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 82px;
+      padding: 12px 8px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      cursor: pointer;
+      transition: 0.18s ease;
+      text-align: center;
+      font-size: 14px;
+      color: var(--muted);
+      background: #fff;
+    }
+
+    .option label strong {
+      color: var(--text);
+      font-size: 18px;
+      margin-bottom: 4px;
+    }
+
+    .option input:checked + label {
+      border-color: var(--primary);
+      background: var(--primary-soft);
+      color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.08);
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 24px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 12px;
+      padding: 13px 18px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .primary-btn {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .secondary-btn {
+      background: #f3f4f6;
+      color: var(--text);
+    }
+
+    .status {
+      margin-top: 14px;
+      min-height: 24px;
+      font-weight: 700;
+    }
+
+    .status.success {
+      color: var(--success);
+    }
+
+    .status.error {
+      color: var(--danger);
+    }
+
+    .results-title {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .results-title h2 {
+      margin: 0;
+      font-size: 24px;
+    }
+
+    .results-title span {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .chart-block + .chart-block {
+      margin-top: 34px;
+    }
+
+    .chart-block h3 {
+      margin: 0 0 12px;
+      font-size: 17px;
+      line-height: 1.45;
+    }
+
+    .bars {
+      display: grid;
+      gap: 10px;
+    }
+
+    .bar-row {
+      display: grid;
+      grid-template-columns: 90px 1fr 52px;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .bar-label {
+      color: var(--muted);
+      font-size: 13px;
+      text-align: right;
+    }
+
+    .bar-track {
+      height: 22px;
+      background: #eef0f4;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #6366f1, #4f46e5);
+      transition: width 0.45s ease;
+    }
+
+    .bar-value {
+      font-size: 13px;
+      font-weight: 700;
+      text-align: right;
+    }
+
+    .note {
+      margin-top: 22px;
+      padding: 14px 16px;
+      background: #f9fafb;
+      border-radius: 12px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 680px) {
+      .container {
+        margin: 24px auto;
+      }
+
+      .card {
+        padding: 20px;
+        border-radius: 16px;
+      }
+
+      .options {
+        grid-template-columns: 1fr;
+      }
+
+      .option label {
+        min-height: auto;
+        flex-direction: row;
+        justify-content: flex-start;
+        gap: 12px;
+      }
+
+      .bar-row {
+        grid-template-columns: 72px 1fr 44px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="container">
+    <section class="header">
+      <h1>간단 설문</h1>
+      <p>아래 두 문항에 응답한 뒤 제출 버튼을 누르면 결과 그래프가 바로 갱신됩니다.</p>
+    </section>
+
+    <section class="card">
+      <form id="surveyForm">
+
+        <!-- =========================
+             질문 1 문구는 여기서 수정
+             ========================= -->
+        <div class="question">
+          <div class="question-number">1</div>
+          <h2 id="q1Title">나는 이 서비스에 전반적으로 만족한다.</h2>
+
+          <div class="options">
+            <div class="option">
+              <input type="radio" name="q1" id="q1-1" value="1">
+              <label for="q1-1"><strong>1</strong>전혀 그렇지 않다</label>
+            </div>
+            <div class="option">
+              <input type="radio" name="q1" id="q1-2" value="2">
+              <label for="q1-2"><strong>2</strong>그렇지 않다</label>
+            </div>
+            <div class="option">
+              <input type="radio" name="q1" id="q1-3" value="3">
+              <label for="q1-3"><strong>3</strong>보통이다</label>
+            </div>
+            <div class="option">
+              <input type="radio" name="q1" id="q1-4" value="4">
+              <label for="q1-4"><strong>4</strong>그렇다</label>
+            </div>
+            <div class="option">
+              <input type="radio" name="q1" id="q1-5" value="5">
+              <label for="q1-5"><strong>5</strong>매우 그렇다</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- =========================
+             질문 2 문구는 여기서 수정
+             ========================= -->
+        <div class="question">
+          <div class="question-number">2</div>
+          <h2 id="q2Title">나는 이 서비스를 다른 사람에게 추천할 의향이 있다.</h2>
+
+          <div class="options">
+            <div class="option">
+              <input type="radio" name="q2" id="q2-1" value="1">
+              <label for="q2-1"><strong>1</strong>전혀 그렇지 않다</label>
+            </div>
+            <div class="option">
+              <input type="radio" name="q2" id="q2-2" value="2">
+              <label for="q2-2"><strong>2</strong>그렇지 않다</label>
+            </div>
+            <div class="option">
+              <input type="radio" name="q2" id="q2-3" value="3">
+              <label for="q2-3"><strong>3</strong>보통이다</label>
+            </div>
+            <div class="option">
+              <input type="radio" name="q2" id="q2-4" value="4">
+              <label for="q2-4"><strong>4</strong>그렇다</label>
+            </div>
+            <div class="option">
+              <input type="radio" name="q2" id="q2-5" value="5">
+              <label for="q2-5"><strong>5</strong>매우 그렇다</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="primary-btn" type="submit">응답 제출하기</button>
+          <button class="secondary-btn" type="button" id="resetBtn">저장된 결과 초기화</button>
+        </div>
+
+        <div id="status" class="status" aria-live="polite"></div>
+      </form>
+    </section>
+
+    <section class="card" id="resultsSection">
+      <div class="results-title">
+        <h2>실시간 결과</h2>
+        <span id="responseCount">응답 0개</span>
+      </div>
+
+      <div class="chart-block">
+        <h3 id="chartQ1Title">문항 1 결과</h3>
+        <div class="bars" id="chartQ1"></div>
+      </div>
+
+      <div class="chart-block">
+        <h3 id="chartQ2Title">문항 2 결과</h3>
+        <div class="bars" id="chartQ2"></div>
+      </div>
+
+      <div class="note">
+        이 버전은 서버 없이 동작합니다. 따라서 응답 결과는 현재 브라우저의
+        <strong>localStorage</strong>에 저장되며, 같은 기기·같은 브라우저에서 제출한 응답만 누적됩니다.
+        여러 사람의 응답을 하나로 모으려면 Firebase, Supabase, Google Sheets API 같은 저장소를 연결해야 합니다.
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const STORAGE_KEY = "simpleSurveyResponses_v1";
+
+    const scaleLabels = [
+      "1 전혀 아님",
+      "2 그렇지 않음",
+      "3 보통",
+      "4 그렇다",
+      "5 매우 그렇다"
+    ];
+
+    function getResponses() {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+      } catch {
+        return [];
+      }
+    }
+
+    function saveResponses(responses) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(responses));
+    }
+
+    function countAnswers(responses, questionKey) {
+      const counts = [0, 0, 0, 0, 0];
+
+      responses.forEach(response => {
+        const value = Number(response[questionKey]);
+        if (value >= 1 && value <= 5) {
+          counts[value - 1] += 1;
+        }
+      });
+
+      return counts;
+    }
+
+    function renderBarChart(containerId, counts) {
+      const container = document.getElementById(containerId);
+      const total = counts.reduce((sum, value) => sum + value, 0);
+      const maxCount = Math.max(...counts, 1);
+
+      container.innerHTML = "";
+
+      counts.forEach((count, index) => {
+        const row = document.createElement("div");
+        row.className = "bar-row";
+
+        const label = document.createElement("div");
+        label.className = "bar-label";
+        label.textContent = scaleLabels[index];
+
+        const track = document.createElement("div");
+        track.className = "bar-track";
+
+        const fill = document.createElement("div");
+        fill.className = "bar-fill";
+        fill.style.width = `${(count / maxCount) * 100}%`;
+
+        const value = document.createElement("div");
+        value.className = "bar-value";
+
+        const percent = total === 0 ? 0 : Math.round((count / total) * 100);
+        value.textContent = `${count} (${percent}%)`;
+
+        track.appendChild(fill);
+        row.appendChild(label);
+        row.appendChild(track);
+        row.appendChild(value);
+        container.appendChild(row);
+      });
+    }
+
+    function renderResults() {
+      const responses = getResponses();
+
+      document.getElementById("responseCount").textContent =
+        `응답 ${responses.length}개`;
+
+      document.getElementById("chartQ1Title").textContent =
+        document.getElementById("q1Title").textContent;
+
+      document.getElementById("chartQ2Title").textContent =
+        document.getElementById("q2Title").textContent;
+
+      renderBarChart("chartQ1", countAnswers(responses, "q1"));
+      renderBarChart("chartQ2", countAnswers(responses, "q2"));
+    }
+
+    document.getElementById("surveyForm").addEventListener("submit", event => {
+      event.preventDefault();
+
+      const q1 = document.querySelector('input[name="q1"]:checked');
+      const q2 = document.querySelector('input[name="q2"]:checked');
+      const status = document.getElementById("status");
+
+      if (!q1 || !q2) {
+        status.className = "status error";
+        status.textContent = "두 문항에 모두 응답해 주세요.";
+        return;
+      }
+
+      const responses = getResponses();
+
+      responses.push({
+        q1: Number(q1.value),
+        q2: Number(q2.value),
+        submittedAt: new Date().toISOString()
+      });
+
+      saveResponses(responses);
+
+      status.className = "status success";
+      status.textContent = "응답이 저장되었습니다. 아래 그래프에 바로 반영했어요.";
+
+      event.target.reset();
+      renderResults();
+
+      document.getElementById("resultsSection").scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
+    });
+
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      const confirmed = confirm("현재 브라우저에 저장된 모든 설문 결과를 삭제할까요?");
+      if (!confirmed) return;
+
+      localStorage.removeItem(STORAGE_KEY);
+
+      const status = document.getElementById("status");
+      status.className = "status success";
+      status.textContent = "저장된 결과를 초기화했습니다.";
+
+      renderResults();
+    });
+
+    renderResults();
+  </script>
+</body>
+</html>
